@@ -97,12 +97,12 @@ class Cache implements CacheInterface
 	 */
 	public function get($key)
 	{
-		if ( !$this->adapter ) {
-			return false;
+		if ( $this->adapter ) {
+			$key = Stringify::formatKey($key);
+			$this->cache = $this->adapter->getItem($key);
+			return $this->cache->get();
 		}
-		$key = Stringify::formatKey($key);
-		$this->cache = $this->adapter->getItem($key);
-		return $this->cache->get();
+		return false;
 	}
 
 	/**
@@ -115,23 +115,23 @@ class Cache implements CacheInterface
 	 */
 	public function set($value, $tags = null)
 	{
-		if ( !$this->adapter ) {
-			return false;
-		}
-		$this->cache->set($value)
-		->expiresAfter(self::$ttl);
-		if ( $tags ) {
-			if ( TypeCheck::isArray($tags) ) {
-				foreach ($tags as $key => $value) {
-					$tags[$key] = Stringify::formatKey($value);
+		if ( $this->adapter ) {
+			$this->cache->set($value)
+			->expiresAfter(self::$ttl);
+			if ( $tags ) {
+				if ( TypeCheck::isArray($tags) ) {
+					foreach ($tags as $key => $value) {
+						$tags[$key] = Stringify::formatKey($value);
+					}
+					$this->cache->addTags($tags);
+				} else {
+					$tags = Stringify::formatKey($tags);
+					$this->cache->addTag($tags);
 				}
-				$this->cache->addTags($tags);
-			} else {
-				$tags = Stringify::formatKey($tags);
-				$this->cache->addTag($tags);
 			}
+			return $this->adapter->save($this->cache);
 		}
-		return $this->adapter->save($this->cache);
+		return false;
 	}
 
 	/**
@@ -144,14 +144,14 @@ class Cache implements CacheInterface
 	 */
 	public function update($key, $value)
 	{
-		if ( !$this->adapter ) {
-			return false;
+		if ( $this->adapter ) {
+			$key = Stringify::formatKey($key);
+			$this->cache = $this->adapter->getItem($key);
+			$this->cache->set($value)
+			->expiresAfter(self::$ttl);
+			return $this->adapter->save($this->cache);
 		}
-		$key = Stringify::formatKey($key);
-		$this->cache = $this->adapter->getItem($key);
-		$this->cache->set($value)
-		->expiresAfter(self::$ttl);
-		return $this->adapter->save($this->cache);
+		return false;
 	}
 
 	/**
@@ -163,11 +163,11 @@ class Cache implements CacheInterface
 	 */
 	public function delete($key)
 	{
-		if ( !$this->adapter ) {
-			return false;
+		if ( $this->adapter ) {
+			$key = Stringify::formatKey($key);
+			return $this->adapter->deleteItem($key);
 		}
-		$key = Stringify::formatKey($key);
-		return $this->adapter->deleteItem($key);
+		return false;
 	}
 
 	/**
@@ -179,18 +179,18 @@ class Cache implements CacheInterface
 	 */
 	public function deleteByTag($tags)
 	{
-		if ( !$this->adapter ) {
-			return false;
-		}
-		if ( TypeCheck::isArray($tags) ) {
-			foreach ($tags as $key => $value) {
-				$tags[$key] = Stringify::formatKey($value);
+		if ( $this->adapter ) {
+			if ( TypeCheck::isArray($tags) ) {
+				foreach ($tags as $key => $value) {
+					$tags[$key] = Stringify::formatKey($value);
+				}
+				return $this->adapter->deleteItemsByTags($tags);
+			} else {
+				$tags = Stringify::formatKey($tags);
+				return $this->adapter->deleteItemsByTag($tags);
 			}
-			return $this->adapter->deleteItemsByTags($tags);
-		} else {
-			$tags = Stringify::formatKey($tags);
-			return $this->adapter->deleteItemsByTag($tags);
 		}
+		return false;
 	}
 
 	/**
