@@ -1,0 +1,41 @@
+{
+  "name":"jakiboy/vanilleplugin-cache",
+  "version":"0.1.0",
+  "type":"library",
+  "description":"Cache for VanillePlugin",
+  "keywords":[
+    "VanillePlugin",
+    "VanilleCache",
+    "WordPress",
+    "WordPress-Plugin",
+    "WordPress-Plugin-Framework",
+    "Boilerplate"
+  ],
+  "homepage":"https://jakiboy.github.io/VanillePlugin/",
+  "license":"MIT",
+  "authors":[
+    {
+      "name":"Jihad Sinnaour",
+      "email":"mail@jihadsinnaour.com",
+      "role":"Founder"
+    },
+    {
+      "name":"Softgine",
+      "email":"e-mailing@soft-gine.com",
+      "role":"Developer"
+    }
+  ],
+  "require":{
+    "php":">=7.2",
+    "phpfastcache/phpfastcache":"7.1.2",
+    "jakiboy/vanilleplugin":"0.9.0"
+  },
+  "autoload":{
+    "psr-4":{
+      "VanilleCache\\":"src/"
+    }
+  },
+  "suggest":{
+    "jakiboy/vanilleplugin-packager":"Prefixes VanilleCache namespaces to avoid issues with other plugins"
+  }
+}
