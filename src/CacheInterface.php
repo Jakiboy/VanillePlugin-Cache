@@ -15,60 +15,83 @@ declare(strict_types=1);
 
 namespace VanilleCache;
 
+use VanillePlugin\int\PluginNameSpaceInterface;
+
 interface CacheInterface
 {
     /**
+     * __construct
      * @param PluginNameSpaceInterface $plugin
      */
     function __construct(PluginNameSpaceInterface $plugin);
-    
+
+    /**
+     * __destruct
+     */
     function __destruct();
 
     /**
+     * Get cache by key.
+     *
      * @param string $key
      * @return mixed
      */
     function get($key);
 
     /**
-     * @param mixed $data
-     * @return void
+     * Set cache by tags.
+     * 
+     * @param mixed $value
+     * @param mixed $tags
+     * @return bool
      */
-    function set($data);
+    function set($value, $tags = null);
 
     /**
+     * Update cache by key.
+     *
      * @param string $key
-     * @param mixed $data
-     * @return void
+     * @param mixed $value
+     * @return bool
      */
-    function update($key, $data);
+    function update($key, $value);
 
     /**
+     * Delete cache by key.
+     *
      * @param string $key
-     * @return void
+     * @return bool
      */
     function delete($key);
 
     /**
-     * @param string $tag
-     * @return void
+     * Delete cache by tags.
+     *
+     * @param mixed $tags
+     * @return bool
      */
-    function deleteByTag($tag);
+    function deleteByTag($tags);
 
     /**
+     * Check cache.
+     *
      * @param void
      * @return bool
      */
     function isCached();
 
     /**
+     * flush cache.
+     *
      * @param void
      * @return void
      */
-    public function flush();
+    function flush();
 
     /**
-     * @param int $ttl 30
+     * Set global cache expiration.
+     * 
+     * @param int $ttl
      * @return void
      */
     static function expireIn($ttl = 30);

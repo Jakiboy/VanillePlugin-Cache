@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 namespace VanilleCache;
 
-use VanillePlugin\int\VanilleCacheInterface;
+use VanillePlugin\lib\PluginOptions;
 use VanillePlugin\int\PluginNameSpaceInterface;
 use VanillePlugin\inc\File;
 use VanillePlugin\inc\Stringify;
@@ -32,7 +32,7 @@ use \Exception;
  * @see https://www.phpfastcache.com/
  * @see https://jakiboy.github.io/VanillePlugin/
  */
-class Cache extends PluginOptions implements VanilleCacheInterface
+class Cache extends PluginOptions implements CacheInterface
 {
 	/**
 	 * @access private
@@ -185,7 +185,7 @@ class Cache extends PluginOptions implements VanilleCacheInterface
 	 * @param mixed $tags
 	 * @return bool
 	 */
-	public function deleteByTag($tags = '')
+	public function deleteByTag($tags)
 	{
 		if ( !$this->adapter ) {
 			return false;
