@@ -37,14 +37,14 @@ class Cache implements CacheInterface
 	use VanillePluginConfig;
 
 	/**
-	 * @access protected
+	 * @access private
 	 * @var object $cache, cache object
 	 * @var object $adapter, adapter object
 	 * @var int $ttl, cache TTL
 	 */
-	protected $cache = false;
-	protected $adapter = false;
-	protected static $ttl = false;
+	private $cache = false;
+	private $adapter = false;
+	private static $ttl = false;
 
 	/**
 	 * @param PluginNameSpaceInterface $plugin
