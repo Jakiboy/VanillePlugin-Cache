@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 namespace VanilleCache;
 
-use VanillePlugin\lib\PluginOptions;
+use VanillePlugin\VanillePluginConfig;
 use VanillePlugin\int\PluginNameSpaceInterface;
 use VanillePlugin\inc\File;
 use VanillePlugin\inc\Stringify;
@@ -26,23 +26,25 @@ use Phpfastcache\Drivers\Files\Config;
 use \Exception;
 
 /**
- * Wrapper Class for External Filecache,
- * Includes Third-Party Cache Helper,
- * Requires: Phpfastcache & VanillePlugin.
- * @see https://www.phpfastcache.com/
+ * Wrapper Class for External FileCache,
+ * Includes Third-Party & Template Cache Helper.
+ * 
  * @see https://jakiboy.github.io/VanillePlugin/
+ * @see https://www.phpfastcache.com/
  */
-class Cache extends PluginOptions implements CacheInterface
+class Cache implements CacheInterface
 {
+	use VanillePluginConfig;
+
 	/**
-	 * @access private
+	 * @access protected
 	 * @var object $cache, cache object
 	 * @var object $adapter, adapter object
 	 * @var int $ttl, cache TTL
 	 */
-	private $cache = false;
-	private $adapter = false;
-	private static $ttl = false;
+	protected $cache = false;
+	protected $adapter = false;
+	protected static $ttl = false;
 
 	/**
 	 * @param PluginNameSpaceInterface $plugin
@@ -62,6 +64,8 @@ class Cache extends PluginOptions implements CacheInterface
 			'path'               => $this->getTempPath(),
 			'autoTmpFallback'    => true,
 			'compressData'       => true,
+			'preventCacheSlams'  => true,
+			'cacheSlamsTimeout'  => 10,
 			'defaultChmod'       => 0755,
 			'securityKey'        => 'private',
 			'cacheFileExtension' => 'db'
@@ -82,18 +86,6 @@ class Cache extends PluginOptions implements CacheInterface
 	public function __destruct()
 	{
 		$this->reset();
-	}
-
-	/**
-	 * Reset adapter instance.
-	 *
-	 * @access private
-	 * @param void
-	 * @return void
-	 */
-	private function reset()
-	{
-		CacheManager::clearInstances();
 	}
 
 	/**
@@ -252,5 +244,17 @@ class Cache extends PluginOptions implements CacheInterface
 	public static function expireIn($ttl = 30)
 	{
 		self::$ttl = (int)$ttl;
+	}
+
+	/**
+	 * Reset adapter instance.
+	 *
+	 * @access protected
+	 * @param void
+	 * @return void
+	 */
+	protected function reset()
+	{
+		CacheManager::clearInstances();
 	}
 }
