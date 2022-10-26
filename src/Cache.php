@@ -31,6 +31,7 @@ use \Exception;
  * 
  * @see https://jakiboy.github.io/VanillePlugin/
  * @see https://www.phpfastcache.com/
+ * @deprecated
  */
 class Cache implements CacheInterface
 {
@@ -204,6 +205,36 @@ class Cache implements CacheInterface
 	{
 		if ( $this->cache ) {
 			return $this->cache->isHit();
+		}
+		return false;
+	}
+
+	/**
+	 * Get cache TTL.
+	 *
+	 * @access public
+	 * @param void
+	 * @return mixed
+	 */
+	public function getTTL()
+	{
+		if ( $this->cache ) {
+			return $this->cache->getTtl();
+		}
+		return false;
+	}
+
+	/**
+	 * Get cache tags.
+	 *
+	 * @access public
+	 * @param void
+	 * @return mixed
+	 */
+	public function getTags()
+	{
+		if ( $this->cache ) {
+			return $this->cache->getTags();
 		}
 		return false;
 	}
