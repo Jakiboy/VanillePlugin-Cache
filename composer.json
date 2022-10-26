@@ -2,16 +2,17 @@
   "name":"jakiboy/vanilleplugin-cache",
   "version":"0.1.0",
   "type":"library",
-  "description":"Cache for VanillePlugin",
+  "description":"FileCache Wrapper Class for WordPress Plugins",
   "keywords":[
+    "php",
     "VanillePlugin",
     "VanilleCache",
-    "WordPress",
+    "WordPress-cache",
     "WordPress-Plugin",
     "WordPress-Plugin-Framework",
     "Boilerplate"
   ],
-  "homepage":"https://jakiboy.github.io/VanillePlugin/",
+  "homepage":"https://jakiboy.github.io/VanillePlugin-Cache/",
   "license":"MIT",
   "authors":[
     {
@@ -36,6 +37,6 @@
     }
   },
   "suggest":{
-    "jakiboy/vanilleplugin-packager":"Prefixes VanilleCache namespaces to avoid issues with other plugins"
+    "jakiboy/vanilleplugin-packager":"Composer Namespaces Prefixer for WordPress Plugins"
   }
 }
