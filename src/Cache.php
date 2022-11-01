@@ -101,18 +101,23 @@ class Cache implements CacheInterface
 	public function get($key)
 	{
 		try {
+
 			if ( $this->adapter ) {
 				$key = Stringify::formatKey($key);
 				$this->cache = $this->adapter->getItem($key);
 				return $this->cache->get();
 			}
 			
+		} catch (Exception $e) {
+			ErrorHandler::clearLastError();
+
 		} catch (PhpfastcacheIOException $e) {
 			ErrorHandler::clearLastError();
 
 		} catch (FilesystemIterator $e) {
 			ErrorHandler::clearLastError();
 		}
+
 		return false;
 	}
 
@@ -127,6 +132,7 @@ class Cache implements CacheInterface
 	public function set($value, $tags = null)
 	{
 		try {
+
 			if ( $this->adapter ) {
 				$this->cache->set($value)
 				->expiresAfter(self::$ttl);
@@ -144,12 +150,16 @@ class Cache implements CacheInterface
 				return $this->adapter->save($this->cache);
 			}
 
+		} catch (Exception $e) {
+			ErrorHandler::clearLastError();
+
 		} catch (PhpfastcacheIOException $e) {
 			ErrorHandler::clearLastError();
 
 		} catch (FilesystemIterator $e) {
 			ErrorHandler::clearLastError();
 		}
+
 		return false;
 	}
 
@@ -164,6 +174,7 @@ class Cache implements CacheInterface
 	public function update($key, $value)
 	{
 		try {
+
 			if ( $this->adapter ) {
 				$key = Stringify::formatKey($key);
 				$this->cache = $this->adapter->getItem($key);
@@ -171,6 +182,9 @@ class Cache implements CacheInterface
 				->expiresAfter(self::$ttl);
 				return $this->adapter->save($this->cache);
 			}
+
+		} catch (Exception $e) {
+			ErrorHandler::clearLastError();
 
 		} catch (PhpfastcacheIOException $e) {
 			ErrorHandler::clearLastError();
@@ -192,17 +206,22 @@ class Cache implements CacheInterface
 	public function delete($key)
 	{
 		try {
+
 			if ( $this->adapter ) {
 				$key = Stringify::formatKey($key);
 				return $this->adapter->deleteItem($key);
 			}
 			
+		} catch (Exception $e) {
+			ErrorHandler::clearLastError();
+
 		} catch (PhpfastcacheIOException $e) {
 			ErrorHandler::clearLastError();
 
 		} catch (FilesystemIterator $e) {
 			ErrorHandler::clearLastError();
 		}
+		
 		return false;
 	}
 
@@ -216,6 +235,7 @@ class Cache implements CacheInterface
 	public function deleteByTag($tags)
 	{
 		try {
+
 			if ( $this->adapter ) {
 				if ( TypeCheck::isArray($tags) ) {
 					foreach ($tags as $key => $value) {
@@ -228,12 +248,16 @@ class Cache implements CacheInterface
 				}
 			}
 			
+		} catch (Exception $e) {
+			ErrorHandler::clearLastError();
+
 		} catch (PhpfastcacheIOException $e) {
 			ErrorHandler::clearLastError();
 
 		} catch (FilesystemIterator $e) {
 			ErrorHandler::clearLastError();
 		}
+
 		return false;
 	}
 
