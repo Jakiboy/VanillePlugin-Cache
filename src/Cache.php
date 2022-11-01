@@ -3,7 +3,7 @@
  * @author     : JIHAD SINNAOUR
  * @package    : VanillePlugin
  * @subpackage : VanilleCache
- * @version    : 0.1.0
+ * @version    : 0.1.1
  * @copyright  : (c) 2018 - 2022 JIHAD SINNAOUR <mail@jihadsinnaour.com>
  * @link       : https://jakiboy.github.io/VanillePlugin/
  * @license    : MIT
@@ -23,7 +23,9 @@ use VanillePlugin\inc\TypeCheck;
 use VanillePlugin\inc\Exception as ErrorHandler;
 use Phpfastcache\CacheManager;
 use Phpfastcache\Drivers\Files\Config;
+use Phpfastcache\Exceptions\PhpfastcacheIOException;
 use \Exception;
+use \FilesystemIterator;
 
 /**
  * Wrapper Class for External FileCache,
@@ -98,10 +100,18 @@ class Cache implements CacheInterface
 	 */
 	public function get($key)
 	{
-		if ( $this->adapter ) {
-			$key = Stringify::formatKey($key);
-			$this->cache = $this->adapter->getItem($key);
-			return $this->cache->get();
+		try {
+			if ( $this->adapter ) {
+				$key = Stringify::formatKey($key);
+				$this->cache = $this->adapter->getItem($key);
+				return $this->cache->get();
+			}
+			
+		} catch (PhpfastcacheIOException $e) {
+			ErrorHandler::clearLastError();
+
+		} catch (FilesystemIterator $e) {
+			ErrorHandler::clearLastError();
 		}
 		return false;
 	}
@@ -116,21 +126,29 @@ class Cache implements CacheInterface
 	 */
 	public function set($value, $tags = null)
 	{
-		if ( $this->adapter ) {
-			$this->cache->set($value)
-			->expiresAfter(self::$ttl);
-			if ( $tags ) {
-				if ( TypeCheck::isArray($tags) ) {
-					foreach ($tags as $key => $value) {
-						$tags[$key] = Stringify::formatKey($value);
+		try {
+			if ( $this->adapter ) {
+				$this->cache->set($value)
+				->expiresAfter(self::$ttl);
+				if ( $tags ) {
+					if ( TypeCheck::isArray($tags) ) {
+						foreach ($tags as $key => $value) {
+							$tags[$key] = Stringify::formatKey($value);
+						}
+						$this->cache->addTags($tags);
+					} else {
+						$tags = Stringify::formatKey($tags);
+						$this->cache->addTag($tags);
 					}
-					$this->cache->addTags($tags);
-				} else {
-					$tags = Stringify::formatKey($tags);
-					$this->cache->addTag($tags);
 				}
+				return $this->adapter->save($this->cache);
 			}
-			return $this->adapter->save($this->cache);
+
+		} catch (PhpfastcacheIOException $e) {
+			ErrorHandler::clearLastError();
+
+		} catch (FilesystemIterator $e) {
+			ErrorHandler::clearLastError();
 		}
 		return false;
 	}
@@ -145,13 +163,22 @@ class Cache implements CacheInterface
 	 */
 	public function update($key, $value)
 	{
-		if ( $this->adapter ) {
-			$key = Stringify::formatKey($key);
-			$this->cache = $this->adapter->getItem($key);
-			$this->cache->set($value)
-			->expiresAfter(self::$ttl);
-			return $this->adapter->save($this->cache);
+		try {
+			if ( $this->adapter ) {
+				$key = Stringify::formatKey($key);
+				$this->cache = $this->adapter->getItem($key);
+				$this->cache->set($value)
+				->expiresAfter(self::$ttl);
+				return $this->adapter->save($this->cache);
+			}
+
+		} catch (PhpfastcacheIOException $e) {
+			ErrorHandler::clearLastError();
+
+		} catch (FilesystemIterator $e) {
+			ErrorHandler::clearLastError();
 		}
+
 		return false;
 	}
 
@@ -164,9 +191,17 @@ class Cache implements CacheInterface
 	 */
 	public function delete($key)
 	{
-		if ( $this->adapter ) {
-			$key = Stringify::formatKey($key);
-			return $this->adapter->deleteItem($key);
+		try {
+			if ( $this->adapter ) {
+				$key = Stringify::formatKey($key);
+				return $this->adapter->deleteItem($key);
+			}
+			
+		} catch (PhpfastcacheIOException $e) {
+			ErrorHandler::clearLastError();
+
+		} catch (FilesystemIterator $e) {
+			ErrorHandler::clearLastError();
 		}
 		return false;
 	}
@@ -180,16 +215,24 @@ class Cache implements CacheInterface
 	 */
 	public function deleteByTag($tags)
 	{
-		if ( $this->adapter ) {
-			if ( TypeCheck::isArray($tags) ) {
-				foreach ($tags as $key => $value) {
-					$tags[$key] = Stringify::formatKey($value);
+		try {
+			if ( $this->adapter ) {
+				if ( TypeCheck::isArray($tags) ) {
+					foreach ($tags as $key => $value) {
+						$tags[$key] = Stringify::formatKey($value);
+					}
+					return $this->adapter->deleteItemsByTags($tags);
+				} else {
+					$tags = Stringify::formatKey($tags);
+					return $this->adapter->deleteItemsByTag($tags);
 				}
-				return $this->adapter->deleteItemsByTags($tags);
-			} else {
-				$tags = Stringify::formatKey($tags);
-				return $this->adapter->deleteItemsByTag($tags);
 			}
+			
+		} catch (PhpfastcacheIOException $e) {
+			ErrorHandler::clearLastError();
+
+		} catch (FilesystemIterator $e) {
+			ErrorHandler::clearLastError();
 		}
 		return false;
 	}
