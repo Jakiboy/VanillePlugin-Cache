@@ -29,7 +29,7 @@
   "require":{
     "php":">=7.2.5",
     "phpfastcache/phpfastcache":"7.1.2",
-    "jakiboy/vanilleplugin":"0.9.1"
+    "jakiboy/vanilleplugin":"0.9.2"
   },
   "autoload":{
     "psr-4":{
