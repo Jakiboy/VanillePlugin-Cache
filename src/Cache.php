@@ -3,7 +3,7 @@
  * @author     : JIHAD SINNAOUR
  * @package    : VanillePlugin
  * @subpackage : VanilleCache
- * @version    : 0.1.1
+ * @version    : 0.1.2
  * @copyright  : (c) 2018 - 2022 JIHAD SINNAOUR <mail@jihadsinnaour.com>
  * @link       : https://jakiboy.github.io/VanillePlugin/
  * @license    : MIT
@@ -103,7 +103,7 @@ class Cache implements CacheInterface
 		try {
 
 			if ( $this->adapter ) {
-				$key = Stringify::formatKey($key);
+				$key = $this->formatKey($key);
 				$this->cache = $this->adapter->getItem($key);
 				return $this->cache->get();
 			}
@@ -139,11 +139,11 @@ class Cache implements CacheInterface
 				if ( $tags ) {
 					if ( TypeCheck::isArray($tags) ) {
 						foreach ($tags as $key => $value) {
-							$tags[$key] = Stringify::formatKey($value);
+							$tags[$key] = $this->formatKey($value);
 						}
 						$this->cache->addTags($tags);
 					} else {
-						$tags = Stringify::formatKey($tags);
+						$tags = $this->formatKey($tags);
 						$this->cache->addTag($tags);
 					}
 				}
@@ -176,7 +176,7 @@ class Cache implements CacheInterface
 		try {
 
 			if ( $this->adapter ) {
-				$key = Stringify::formatKey($key);
+				$key = $this->formatKey($key);
 				$this->cache = $this->adapter->getItem($key);
 				$this->cache->set($value)
 				->expiresAfter(self::$ttl);
@@ -208,7 +208,7 @@ class Cache implements CacheInterface
 		try {
 
 			if ( $this->adapter ) {
-				$key = Stringify::formatKey($key);
+				$key = $this->formatKey($key);
 				return $this->adapter->deleteItem($key);
 			}
 			
@@ -239,11 +239,11 @@ class Cache implements CacheInterface
 			if ( $this->adapter ) {
 				if ( TypeCheck::isArray($tags) ) {
 					foreach ($tags as $key => $value) {
-						$tags[$key] = Stringify::formatKey($value);
+						$tags[$key] = $this->formatKey($value);
 					}
 					return $this->adapter->deleteItemsByTags($tags);
 				} else {
-					$tags = Stringify::formatKey($tags);
+					$tags = $this->formatKey($tags);
 					return $this->adapter->deleteItemsByTag($tags);
 				}
 			}
@@ -316,18 +316,16 @@ class Cache implements CacheInterface
 	public function flush()
 	{
 		// Secured removing: filecache
-		if ( File::isDir($this->getTempPath()) ) {
-			if ( Stringify::contains($this->getTempPath(),$this->getRoot()) ) {
-				File::clearDir($this->getTempPath());
-			}
+		$dir = $this->getTempPath();
+		if ( File::isDir($dir) && Stringify::contains($dir,"/{$this->getNameSpace()}/") ) {
+			File::clearDir($dir);
 		}
 
 		// Secured removing: template cache on debug
 		if ( $this->isDebug() ) {
-			if ( File::isDir($this->getCachePath()) ) {
-				if ( Stringify::contains($this->getCachePath(),$this->getRoot()) ) {
-					File::clearDir($this->getCachePath());
-				}
+			$dir = $this->getCachePath();
+			if ( File::isDir($dir) && Stringify::contains($dir,"/{$this->getNameSpace()}/") ) {
+				File::clearDir($dir);
 			}
 		}
 	}
@@ -354,5 +352,15 @@ class Cache implements CacheInterface
 	protected function reset()
 	{
 		CacheManager::clearInstances();
+	}
+
+	/**
+	 * @access protected
+	 * @param int|string $key
+	 * @return string
+	 */
+	protected function formatKey($key)
+	{
+		return Stringify::sanitizeKey($key);
 	}
 }
