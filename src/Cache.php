@@ -4,7 +4,7 @@
  * @package    : VanillePlugin
  * @subpackage : VanilleCache
  * @version    : 0.1.2
- * @copyright  : (c) 2018 - 2022 JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2018 - 2023 JIHAD SINNAOUR <mail@jihadsinnaour.com>
  * @link       : https://jakiboy.github.io/VanillePlugin/
  * @license    : MIT
  *
