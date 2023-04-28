@@ -1,6 +1,6 @@
 {
   "name":"jakiboy/vanilleplugin-cache",
-  "version":"0.1.4",
+  "version":"0.1.5",
   "type":"library",
   "description":"FileCache Wrapper Class for WordPress Plugins",
   "keywords":[
