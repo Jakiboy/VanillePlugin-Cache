@@ -34,4 +34,4 @@ Please give it a Star if you like the project.
 
 ## 💡 Notice:
 
-* *This Class is deprecated! Use VanillePlugin/Transient Or VanillePlugin/Cache (non-persistent cache)*.
+* *Recommanded to use VanillePlugin/Transient or VanillePlugin/Cache (non-persistent cache)*.

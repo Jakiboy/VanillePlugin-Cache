@@ -1,12 +1,11 @@
 {
   "name":"jakiboy/vanilleplugin-cache",
-  "version":"0.1.5",
+  "version":"1.0.0",
   "type":"library",
   "description":"FileCache Wrapper Class for WordPress Plugins",
   "keywords":[
-    "php",
     "VanillePlugin",
-    "VanilleCache",
+    "WordPress",
     "WordPress-cache",
     "WordPress-Plugin",
     "WordPress-Plugin-Framework",
@@ -19,17 +18,12 @@
       "name":"Jihad Sinnaour",
       "email":"mail@jihadsinnaour.com",
       "role":"Founder"
-    },
-    {
-      "name":"Softgine",
-      "email":"e-mailing@soft-gine.com",
-      "role":"Developer"
     }
   ],
   "require":{
-    "php":">=7.2.5",
-    "phpfastcache/phpfastcache":"^7.1.2",
-    "jakiboy/vanilleplugin":"^0.9.6"
+    "php":">=7.4",
+    "phpfastcache/phpfastcache":"^8.1.4",
+    "jakiboy/vanilleplugin":"^1.0.0"
   },
   "autoload":{
     "psr-4":{

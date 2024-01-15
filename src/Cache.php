@@ -1,10 +1,9 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : VanillePlugin
- * @subpackage : VanilleCache
- * @version    : 0.1.5
- * @copyright  : (c) 2018 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @version    : 1.0.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://jakiboy.github.io/VanillePlugin/
  * @license    : MIT
  *
@@ -15,352 +14,163 @@ declare(strict_types=1);
 
 namespace VanilleCache;
 
-use VanillePlugin\VanillePluginConfig;
-use VanillePlugin\int\PluginNameSpaceInterface;
-use VanillePlugin\inc\File;
-use VanillePlugin\inc\Stringify;
-use VanillePlugin\inc\TypeCheck;
-use VanillePlugin\inc\Exception as ErrorHandler;
-use Phpfastcache\CacheManager;
-use Phpfastcache\Drivers\Files\Config;
-use Phpfastcache\Exceptions\PhpfastcacheIOException;
-use \Exception;
-use \FilesystemIterator;
+use VanilleCache\inc\{
+	FileCache, RedisCache
+};
+use VanilleCache\exc\CacheException;
 
 /**
- * Wrapper Class for External FileCache,
- * Includes Third-Party & Template Cache Helper.
- * 
- * @see https://jakiboy.github.io/VanillePlugin/
- * @see https://www.phpfastcache.com/
- * @deprecated
+ * Built-in cache factory.
  */
-class Cache implements CacheInterface
+class Cache
 {
-	use VanillePluginConfig;
+	use \VanillePlugin\tr\TraitFormattable;
 
 	/**
 	 * @access private
-	 * @var object $cache, cache object
-	 * @var object $adapter, adapter object
-	 * @var int $ttl, cache TTL
+	 * @var object $instance, Cache instance
+	 * @var object DRIVERS, Valid drivers
 	 */
-	private $cache = false;
-	private $adapter = false;
-	private static $ttl = false;
+	private $instance;
+	private const DRIVERS = ['File', 'Redis'];
 
 	/**
-	 * @param PluginNameSpaceInterface $plugin
+	 * Instance cache driver.
+	 * 
+	 * @access public
+	 * @param string $driver
+	 * @param array $config
 	 */
-	public function __construct(PluginNameSpaceInterface $plugin)
+	public function __construct(string $driver = 'File', array $config = [])
 	{
-		// Init plugin config
-		$this->initConfig($plugin);
-
-		// Set default ttl
-		if ( !self::$ttl ) {
-			self::expireIn($this->getExpireIn());
+		// Check driver
+		if ( !$this->inArray($driver, self::DRIVERS) ) {
+	        throw new CacheException(
+	            CacheException::invalidCacheDriver($driver)
+	        );
 		}
 
-		// Set adapter default config
-		CacheManager::setDefaultConfig(new Config([
-			'path'               => $this->getTempPath(),
-			'autoTmpFallback'    => true,
-			'compressData'       => true,
-			'preventCacheSlams'  => true,
-			'cacheSlamsTimeout'  => 10,
-			'defaultChmod'       => 0755,
-			'securityKey'        => 'private',
-			'cacheFileExtension' => 'db'
-		]));
+		// Instance driver
+		if ( $driver == 'Redis' ) {
+			$this->instance = new RedisCache($config);
 
-		// Init adapter
-		$this->reset();
-		try {
-			$this->adapter = CacheManager::getInstance('Files');
-		} catch (Exception $e) {
-			ErrorHandler::clearLastError();
+		} else {
+			$this->instance = new FileCache($config);
+		}
+
+		// Check instance
+		if ( !$this->hasObject('interface', $this->instance, 'cache') ) {
+	        throw new CacheException(
+	            CacheException::invalidCacheInstance()
+	        );
 		}
 	}
 
 	/**
-	 * Clear adapter instances.
-	 */
-	public function __destruct()
-	{
-		$this->reset();
-	}
-
-	/**
-	 * Get cache by key.
-	 *
+	 * Get cache.
+	 * 
 	 * @access public
 	 * @param string $key
 	 * @return mixed
 	 */
-	public function get($key)
+	public function get(string $key)
 	{
-		try {
-
-			if ( $this->adapter ) {
-				$key = $this->formatKey($key);
-				$this->cache = $this->adapter->getItem($key);
-				return $this->cache->get();
-			}
-			
-		} catch (Exception $e) {
-			ErrorHandler::clearLastError();
-
-		} catch (PhpfastcacheIOException $e) {
-			ErrorHandler::clearLastError();
-
-		} catch (FilesystemIterator $e) {
-			ErrorHandler::clearLastError();
-		}
-
-		return false;
+		return $this->instance->get(
+			$this->formatKey($key)
+		);
 	}
 
 	/**
-	 * Set cache by tags.
-	 *
-	 * @access public
-	 * @param mixed $value
-	 * @param mixed $tags
-	 * @return bool
-	 */
-	public function set($value, $tags = null)
-	{
-		try {
-
-			if ( $this->adapter ) {
-				$this->cache->set($value)
-				->expiresAfter(self::$ttl);
-				if ( $tags ) {
-					if ( TypeCheck::isArray($tags) ) {
-						foreach ($tags as $key => $value) {
-							$tags[$key] = $this->formatKey($value);
-						}
-						$this->cache->addTags($tags);
-					} else {
-						$tags = $this->formatKey($tags);
-						$this->cache->addTag($tags);
-					}
-				}
-				return $this->adapter->save($this->cache);
-			}
-
-		} catch (Exception $e) {
-			ErrorHandler::clearLastError();
-
-		} catch (PhpfastcacheIOException $e) {
-			ErrorHandler::clearLastError();
-
-		} catch (FilesystemIterator $e) {
-			ErrorHandler::clearLastError();
-		}
-
-		return false;
-	}
-
-	/**
-	 * Update cache by key.
-	 *
+	 * Set cache key.
+	 * 
 	 * @access public
 	 * @param string $key
-	 * @param mixed $value
-	 * @return bool
+	 * @return object
 	 */
-	public function update($key, $value)
+	public function setKey(string $key) : self
 	{
-		try {
-
-			if ( $this->adapter ) {
-				$key = $this->formatKey($key);
-				$this->cache = $this->adapter->getItem($key);
-				$this->cache->set($value)
-				->expiresAfter(self::$ttl);
-				return $this->adapter->save($this->cache);
-			}
-
-		} catch (Exception $e) {
-			ErrorHandler::clearLastError();
-
-		} catch (PhpfastcacheIOException $e) {
-			ErrorHandler::clearLastError();
-
-		} catch (FilesystemIterator $e) {
-			ErrorHandler::clearLastError();
-		}
-
-		return false;
-	}
-
-	/**
-	 * Delete cache by key.
-	 *
-	 * @access public
-	 * @param string $key
-	 * @return bool
-	 */
-	public function delete($key)
-	{
-		try {
-
-			if ( $this->adapter ) {
-				$key = $this->formatKey($key);
-				return $this->adapter->deleteItem($key);
-			}
-			
-		} catch (Exception $e) {
-			ErrorHandler::clearLastError();
-
-		} catch (PhpfastcacheIOException $e) {
-			ErrorHandler::clearLastError();
-
-		} catch (FilesystemIterator $e) {
-			ErrorHandler::clearLastError();
-		}
-		
-		return false;
-	}
-
-	/**
-	 * Delete cache by tags.
-	 *
-	 * @access public
-	 * @param mixed $tags
-	 * @return bool
-	 */
-	public function deleteByTag($tags)
-	{
-		try {
-
-			if ( $this->adapter ) {
-				if ( TypeCheck::isArray($tags) ) {
-					foreach ($tags as $key => $value) {
-						$tags[$key] = $this->formatKey($value);
-					}
-					return $this->adapter->deleteItemsByTags($tags);
-				} else {
-					$tags = $this->formatKey($tags);
-					return $this->adapter->deleteItemsByTag($tags);
-				}
-			}
-			
-		} catch (Exception $e) {
-			ErrorHandler::clearLastError();
-
-		} catch (PhpfastcacheIOException $e) {
-			ErrorHandler::clearLastError();
-
-		} catch (FilesystemIterator $e) {
-			ErrorHandler::clearLastError();
-		}
-
-		return false;
+		$this->get($key);
+		return $this;
 	}
 
 	/**
 	 * Check cache.
 	 *
 	 * @access public
-	 * @param void
 	 * @return bool
 	 */
-	public function isCached()
+	public function isCached() : bool
 	{
-		if ( $this->cache ) {
-			return $this->cache->isHit();
-		}
-		return false;
+		return $this->instance->isCached();
 	}
 
 	/**
-	 * Get cache TTL.
-	 *
-	 * @access public
-	 * @param void
-	 * @return mixed
-	 */
-	public function getTTL()
-	{
-		if ( $this->cache ) {
-			return $this->cache->getTtl();
-		}
-		return false;
-	}
-
-	/**
-	 * Get cache tags.
-	 *
-	 * @access public
-	 * @param void
-	 * @return mixed
-	 */
-	public function getTags()
-	{
-		if ( $this->cache ) {
-			return $this->cache->getTags();
-		}
-		return false;
-	}
-
-	/**
-	 * flush cache.
-	 *
-	 * @access public
-	 * @param void
-	 * @return void
-	 */
-	public function flush()
-	{
-		// Secured removing: filecache
-		$dir = $this->getTempPath();
-		if ( File::isDir($dir) && Stringify::contains($dir,"/{$this->getNameSpace()}/") ) {
-			File::clearDir($dir);
-		}
-
-		// Secured removing: template cache on debug
-		if ( $this->isDebug() ) {
-			$dir = $this->getCachePath();
-			if ( File::isDir($dir) && Stringify::contains($dir,"/{$this->getNameSpace()}/") ) {
-				File::clearDir($dir);
-			}
-		}
-	}
-
-	/**
-	 * Set global cache expiration.
+	 * Set cache value.
 	 * 
 	 * @access public
+	 * @param mixed $value
+	 * @param mixed $tag
 	 * @param int $ttl
-	 * @return void
+	 * @return bool
 	 */
-	public static function expireIn($ttl = 30)
+	public function set($value, $tag = null, ?int $ttl = null) : bool
 	{
-		self::$ttl = (int)$ttl;
+		return $this->instance->set($value, $tag, $ttl);
 	}
 
 	/**
-	 * Reset adapter instance.
+	 * Delete cache by key(s).
+	 * 
+	 * @access public
+	 * @param mixed $key
+	 * @return bool
+	 */
+	public function delete($key) : bool
+	{
+		if ( $this->isType('array', $key) ) {
+			$this->instance->deleteMany($key);
+		}
+		return $this->instance->delete(
+			$this->formatKey((string)$key)
+		);
+	}
+
+	/**
+	 * Delete cache by tag(s).
+	 * 
+	 * @access public
+	 * @param mixed $tag
+	 * @return bool
+	 */
+	public function deleteByTag($tag) : bool
+	{
+		if ( $this->isType('array', $tag) ) {
+			return $this->instance->deleteByTags($tag);
+		}
+		return $this->instance->deleteByTag(
+			$this->formatKey((string)$tag)
+		);
+	}
+
+	/**
+	 * Purge any cache.
+	 * 
+	 * @access public
+	 * @return bool
+	 */
+	public function purge() : bool
+	{
+		return $this->instance->purge();
+	}
+
+	/**
+	 * Reset instance.
 	 *
-	 * @access protected
-	 * @param void
+	 * @access public
 	 * @return void
 	 */
-	protected function reset()
+	public function reset()
 	{
-		CacheManager::clearInstances();
-	}
-
-	/**
-	 * @access protected
-	 * @param int|string $key
-	 * @return string
-	 */
-	protected function formatKey($key)
-	{
-		return Stringify::sanitizeKey($key);
+		$this->instance->reset();
 	}
 }
