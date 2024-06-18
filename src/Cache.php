@@ -130,6 +130,7 @@ class Cache
 		if ( $this->isType('array', $key) ) {
 			$this->instance->deleteMany($key);
 		}
+
 		return $this->instance->delete(
 			$this->formatKey((string)$key)
 		);
@@ -147,6 +148,7 @@ class Cache
 		if ( $this->isType('array', $tag) ) {
 			return $this->instance->deleteByTags($tag);
 		}
+		
 		return $this->instance->deleteByTag(
 			$this->formatKey((string)$tag)
 		);
