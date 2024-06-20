@@ -60,7 +60,7 @@ class FileCache extends ProxyCache implements CacheInterface
 			}
 		}
 
-		// Reset plugin config
+		// Reset config
 		$this->resetConfig();
     }
 }
