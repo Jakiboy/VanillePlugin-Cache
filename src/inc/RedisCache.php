@@ -73,7 +73,7 @@ final class RedisCache extends ProxyCache implements CacheInterface
 			$this->instance = CacheManager::getInstance('Files');
 		}
 
-		// Reset configuration
+		// Reset config
 		$this->resetConfig();
     }
 }
