@@ -15,10 +15,7 @@ declare(strict_types=1);
 namespace VanilleCache\inc;
 
 use VanilleCache\int\CacheInterface;
-use Phpfastcache\{
-	CacheManager,
-	Drivers\Redis\Config
-};
+use Phpfastcache\Drivers\Redis\Config;
 
 /**
  * Wrapper class for RedisCache.
@@ -27,53 +24,49 @@ use Phpfastcache\{
 final class RedisCache extends ProxyCache implements CacheInterface
 {
 	/**
+	 * @access private
+	 * @var bool $initialized
+	 */
+	private static $initialized = false;
+
+	/**
 	 * @inheritdoc
 	 */
     public function __construct(array $config = [])
     {
-		// Reset instance
-		CacheManager::clearInstances();
+		if ( !static::$initialized ) {
 
-		// Init path
-		$config = $this->mergeArray([
-			'host'       => '127.0.0.1',
-			'port'       => 6379,
-			'password'   => '',
-			'database'   => 0,
-			'defaultTtl' => $this->getExpireIn()
-		], $config);
-
-		if ( isset($config['path']) ) {
 			unset($config['path']);
-		}
-
-		// Init instance
-		try {
-			$this->instance = CacheManager::getInstance('Redis', new Config($config));
-
-		} catch (\Phpfastcache\Exceptions\PhpfastcacheDriverConnectException $e) {
-
-			$this->clearLastError();
-			if ( $this->hasDebug() ) {
-				$this->error('Redis cache failed');
-				$this->debug($e->getMessage());
+			$config = $this->mergeArray([
+				'host'       => '127.0.0.1',
+				'port'       => 6379,
+				'password'   => '',
+				'database'   => 0,
+				'defaultTtl' => $this->getExpireIn()
+			], $config);
+	
+			try {
+				parent::__construct('Redis', new Config($config));
+	
+			} catch (
+				\Phpfastcache\Exceptions\PhpfastcacheDriverConnectException |
+				\Phpfastcache\Exceptions\PhpfastcacheDriverCheckException $e
+			) {
+	
+				$this->clearLastError();
+				if ( $this->hasDebug() ) {
+					$this->error('Redis cache failed');
+					$this->debug($e->getMessage());
+				}
 			}
 
-		} catch (\Phpfastcache\Exceptions\PhpfastcacheDriverCheckException $e) {
-
-			$this->clearLastError();
-			if ( $this->hasDebug() ) {
-				$this->error('Redis cache driver failed');
-				$this->debug($e->getMessage());
+			if ( !$this->instance ) {
+				$this->instance = new FileCache();
 			}
+	
+			// Reset config
+			$this->resetConfig();
+			
 		}
-
-		// Set backup instance
-		if ( !$this->instance ) {
-			$this->instance = CacheManager::getInstance('Files');
-		}
-
-		// Reset config
-		$this->resetConfig();
     }
 }

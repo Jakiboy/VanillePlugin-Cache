@@ -18,7 +18,7 @@ interface CacheInterface
 {
     /**
 	 * Init cache driver configuration.
-	 * 
+	 *
 	 * @param array $config
 	 */
     function __construct(array $config = []);

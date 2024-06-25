@@ -29,150 +29,102 @@ class Cache
 	/**
 	 * @access private
 	 * @var object $instance, Cache instance
-	 * @var object DRIVERS, Valid drivers
+	 * @var object DRIVERS, Cache drivers
 	 */
-	private $instance;
+	private static $instance;
 	private const DRIVERS = ['File', 'Redis'];
 
 	/**
 	 * Instance cache driver.
-	 * 
+	 *
 	 * @access public
 	 * @param string $driver
 	 * @param array $config
 	 */
 	public function __construct(string $driver = 'File', array $config = [])
 	{
-		// Check driver
-		if ( !$this->inArray($driver, self::DRIVERS) ) {
-	        throw new CacheException(
-	            CacheException::invalidCacheDriver($driver)
-	        );
+		if ( !self::$instance ) {
+
+			if ( !$this->inArray($driver, self::DRIVERS) ) {
+				throw new CacheException(
+					CacheException::invalidCacheDriver($driver)
+				);
+			}
+
+			if ( $driver == 'Redis' ) {
+				self::$instance = new RedisCache($config);
+
+			} else {
+				self::$instance = new FileCache($config);
+			}
+			
+			if ( !$this->hasObject('interface', self::$instance, 'cache') ) {
+				throw new CacheException(
+					CacheException::invalidCacheInstance()
+				);
+			}
+			
 		}
-
-		// Instance driver
-		if ( $driver == 'Redis' ) {
-			$this->instance = new RedisCache($config);
-
-		} else {
-			$this->instance = new FileCache($config);
-		}
-
-		// Check instance
-		if ( !$this->hasObject('interface', $this->instance, 'cache') ) {
-	        throw new CacheException(
-	            CacheException::invalidCacheInstance()
-	        );
-		}
 	}
 
 	/**
-	 * Get cache.
-	 * 
-	 * @access public
-	 * @param string $key
-	 * @return mixed
+	 * @inheritdoc
 	 */
-	public function get(string $key)
+	public function get(string $key, ?bool &$status = null)
 	{
-		return $this->instance->get(
-			$this->formatKey($key)
-		);
+		$key = $this->formatKey($key);
+		return self::$instance->get($key, $status);
 	}
 
 	/**
-	 * Set cache key.
-	 * 
-	 * @access public
-	 * @param string $key
-	 * @return object
+	 * @inheritdoc
 	 */
-	public function setKey(string $key) : self
+	public function has(string $key) : bool
 	{
-		$this->get($key);
-		return $this;
+		return self::$instance->has($key);
 	}
 
 	/**
-	 * Check cache.
-	 *
-	 * @access public
-	 * @return bool
+	 * @inheritdoc
 	 */
-	public function isCached() : bool
+	public function set(string $key, $value, ?int $ttl = null, $tag = null) : bool
 	{
-		return $this->instance->isCached();
+		return self::$instance->set($key, $value, $ttl, $tag);
 	}
 
 	/**
-	 * Set cache value.
-	 * 
-	 * @access public
-	 * @param mixed $value
-	 * @param mixed $tag
-	 * @param int $ttl
-	 * @return bool
-	 */
-	public function set($value, $tag = null, ?int $ttl = null) : bool
-	{
-		return $this->instance->set($value, $tag, $ttl);
-	}
-
-	/**
-	 * Delete cache by key(s).
-	 * 
-	 * @access public
-	 * @param mixed $key
-	 * @return bool
+	 * @inheritdoc
 	 */
 	public function delete($key) : bool
 	{
 		if ( $this->isType('array', $key) ) {
-			$this->instance->deleteMany($key);
+			self::$instance->deleteMany($key);
 		}
 
-		return $this->instance->delete(
+		return self::$instance->delete(
 			$this->formatKey((string)$key)
 		);
 	}
 
 	/**
-	 * Delete cache by tag(s).
-	 * 
-	 * @access public
-	 * @param mixed $tag
-	 * @return bool
+	 * @inheritdoc
 	 */
 	public function deleteByTag($tag) : bool
 	{
 		if ( $this->isType('array', $tag) ) {
-			return $this->instance->deleteByTags($tag);
+			return self::$instance->deleteByTags($tag);
 		}
 		
-		return $this->instance->deleteByTag(
+		return self::$instance->deleteByTag(
 			$this->formatKey((string)$tag)
 		);
 	}
 
 	/**
-	 * Purge any cache.
-	 * 
-	 * @access public
-	 * @return bool
+	 * @inheritdoc
 	 */
 	public function purge() : bool
 	{
-		return $this->instance->purge();
-	}
-
-	/**
-	 * Reset instance.
-	 *
-	 * @access public
-	 * @return void
-	 */
-	public function reset()
-	{
-		$this->instance->reset();
+		return self::$instance->purge();
 	}
 }

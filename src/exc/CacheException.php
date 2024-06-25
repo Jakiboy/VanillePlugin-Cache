@@ -25,9 +25,4 @@ class CacheException extends \Exception
     {
         return 'Invalid cache instance : Must implements CacheInterface';
     }
-
-    public static function invalidCacheItem()
-    {
-        return 'Invalid cache item : Undefined key';
-    }
 }

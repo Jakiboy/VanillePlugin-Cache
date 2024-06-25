@@ -15,7 +15,6 @@ declare(strict_types=1);
 namespace VanilleCache\inc;
 
 use Phpfastcache\Proxy\PhpfastcacheAbstractProxy;
-use VanilleCache\exc\CacheException;
 
 /**
  * Wrapper class for AbstractCache.
@@ -28,72 +27,75 @@ class ProxyCache extends PhpfastcacheAbstractProxy
 		\VanillePlugin\tr\TraitLoggable;
 
 	/**
-	 * @access private
-	 * @var object $item, Cache item
+	 * Instance cache driver.
+	 *
+	 * @access public
+	 * @param string $driver
+	 * @param mixed $config
 	 */
-	private $item;
-    
+	public function __construct(string $driver = 'File', $config = null)
+	{
+		parent::__construct($driver, $config);
+	}
+
 	/**
 	 * Get cache.
 	 *
 	 * @access public
 	 * @param string $key
+	 * @param bool $status
 	 * @return mixed
 	 */
-	public function get(string $key)
+	public function get(string $key, ?bool &$status = null)
 	{
-		$this->item = $this->instance->getItem($key);
-		return $this->item->get();
+		$data   = $this->getItem($key)->get();
+		$status = $this->has($key);
+		return $data;
 	}
 
 	/**
-	 * Check cache.
+	 * Check cache status.
 	 *
 	 * @access public
+	 * @param string $key
 	 * @return bool
-	 * @throws CacheException
 	 */
-	public function isCached() : bool
+	public function has(string $key) : bool
 	{
-		if ( !$this->hasObject('interface', $this->item, 'ExtendedCacheItemInterface') ) {
-	        throw new CacheException(
-	            CacheException::invalidCacheItem()
-	        );
-		}
-		return $this->item->isHit();
+		return $this->getItem($key)->isHit();
 	}
 
 	/**
-	 * Set cache value,
-	 * Using tag(s).
+	 * Set cache value.
 	 *
 	 * @access public
+	 * @param string $key
 	 * @param mixed $value
-	 * @param mixed $tag
 	 * @param int $ttl
+	 * @param mixed $tag
 	 * @return bool
-	 * @throws CacheException
 	 */
-	public function set($value, $tag = null, ?int $ttl = null) : bool
+	public function set(string $key, $value, ?int $ttl = null, $tag = null) : bool
 	{
-		if ( !$this->hasObject('interface', $this->item, 'ExtendedCacheItemInterface') ) {
-	        throw new CacheException(
-	            CacheException::invalidCacheItem()
-	        );
-		}
-		$this->item->set($value);
-		if ( $ttl ) {
-			$this->item->expiresAfter($ttl);
-		}
-		if ( $tag ) {
-			if ( $this->isType('array', $tag) ) {
-				$this->item->addTags($tag);
+		$item = $this->getItem($key);
+		$item->set($value);
 
-			} else {
-				$this->item->addTag((string)$tag);
-			}
+		if ( $ttl ) {
+			$item->expiresAfter($ttl);
 		}
-		return $this->instance->save($this->item);
+
+		if ( $this->isType('null', $tag) ) {
+			$tag = $this->getNamespace();
+		}
+
+		if ( $this->isType('array', $tag) ) {
+			$item->addTags($tag);
+
+		} else {
+			$item->addTag((string)$tag);
+		}
+
+		return $this->instance->save($item);
 	}
 
 	/**
@@ -153,5 +155,17 @@ class ProxyCache extends PhpfastcacheAbstractProxy
 	public function purge() : bool
 	{
 		return $this->instance->clear();
+	}
+
+	/**
+	 * Get cache item.
+	 *
+	 * @access protected
+	 * @param string $key
+	 * @return object
+	 */
+	protected function getItem(string $key)
+	{
+		return $this->instance->getItem($key);
 	}
 }

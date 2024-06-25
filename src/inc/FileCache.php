@@ -15,52 +15,55 @@ declare(strict_types=1);
 namespace VanilleCache\inc;
 
 use VanilleCache\int\CacheInterface;
-use Phpfastcache\{
-	CacheManager,
-	Drivers\Files\Config
-};
+use Phpfastcache\Drivers\Files\Config;
 
 /**
  * Wrapper class for FileCache.
  * @see https://www.phpfastcache.com
  */
-class FileCache extends ProxyCache implements CacheInterface
+final class FileCache extends ProxyCache implements CacheInterface
 {
+	/**
+	 * @access private
+	 * @var bool $initialized
+	 */
+	private static $initialized = false;
+
 	/**
 	 * @inheritdoc
 	 */
     public function __construct(array $config = [])
     {
-		// Reset instance
-		CacheManager::clearInstances();
+		if ( !static::$initialized ) {
 
-		// Init config
-		$config = $this->mergeArray([
-			'path'               => $this->getTempPath(),
-			'autoTmpFallback'    => true,
-			'compressData'       => true,
-			'preventCacheSlams'  => true,
-			'cacheSlamsTimeout'  => 5,
-			'defaultChmod'       => 0777,
-			'defaultTtl'         => $this->getExpireIn(),
-			'securityKey'        => 'private',
-			'cacheFileExtension' => 'txt'
-		], $config);
-
-		// Init instance
-		try {
-			$this->instance = CacheManager::getInstance('Files', new Config($config));
-
-		} catch (\Phpfastcache\Exceptions\PhpfastcacheIOException $e) {
-
-			$this->clearLastError();
-			if ( $this->hasDebug() ) {
-				$this->error('File cache failed');
-				$this->debug($e->getMessage());
+			$config = $this->mergeArray([
+				'path'               => $this->getTempPath(),
+				'autoTmpFallback'    => true,
+				'compressData'       => true,
+				'preventCacheSlams'  => true,
+				'cacheSlamsTimeout'  => 3,
+				'defaultChmod'       => 0777,
+				'defaultTtl'         => $this->getExpireIn(),
+				'securityKey'        => 'private',
+				'cacheFileExtension' => 'txt'
+			], $config);
+	
+			try {
+	
+				parent::__construct('Files', new Config($config));
+	
+			} catch (\Phpfastcache\Exceptions\PhpfastcacheIOException $e) {
+	
+				$this->clearLastError();
+				if ( $this->hasDebug() ) {
+					$this->error('File cache failed');
+					$this->debug($e->getMessage());
+				}
 			}
+	
+			// Reset config
+			$this->resetConfig();
+			
 		}
-
-		// Reset config
-		$this->resetConfig();
     }
 }
