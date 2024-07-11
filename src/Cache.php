@@ -72,7 +72,6 @@ class Cache
 	 */
 	public function get(string $key, ?bool &$status = null)
 	{
-		$key = $this->formatKey($key);
 		return self::$instance->get($key, $status);
 	}
 
@@ -87,37 +86,17 @@ class Cache
 	/**
 	 * @inheritdoc
 	 */
-	public function set(string $key, $value, ?int $ttl = null, $tag = null) : bool
+	public function set(string $key, $value, ?int $ttl = null, ?string $group = null) : bool
 	{
-		return self::$instance->set($key, $value, $ttl, $tag);
+		return self::$instance->set($key, $value, $ttl, $group);
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	public function delete($key) : bool
+	public function delete(string $key) : bool
 	{
-		if ( $this->isType('array', $key) ) {
-			self::$instance->deleteMany($key);
-		}
-
-		return self::$instance->delete(
-			$this->formatKey((string)$key)
-		);
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function deleteByTag($tag) : bool
-	{
-		if ( $this->isType('array', $tag) ) {
-			return self::$instance->deleteByTags($tag);
-		}
-		
-		return self::$instance->deleteByTag(
-			$this->formatKey((string)$tag)
-		);
+		return self::$instance->delete($key);
 	}
 
 	/**

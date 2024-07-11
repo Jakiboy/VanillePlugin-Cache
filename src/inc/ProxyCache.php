@@ -72,27 +72,20 @@ class ProxyCache extends PhpfastcacheAbstractProxy
 	 * @param string $key
 	 * @param mixed $value
 	 * @param int $ttl
-	 * @param mixed $tag
+	 * @param string $group
 	 * @return bool
 	 */
-	public function set(string $key, $value, ?int $ttl = null, $tag = null) : bool
+	public function set(string $key, $value, ?int $ttl = null, ?string $group = null) : bool
 	{
 		$item = $this->getItem($key);
 		$item->set($value);
 
-		if ( $ttl ) {
+		if ( !$this->isType('null', $ttl) ) {
 			$item->expiresAfter($ttl);
 		}
 
-		if ( $this->isType('null', $tag) ) {
-			$tag = $this->getNamespace();
-		}
-
-		if ( $this->isType('array', $tag) ) {
-			$item->addTags($tag);
-
-		} else {
-			$item->addTag((string)$tag);
+		if ( !$this->isType('null', $group) ) {
+			$item->addTag($group);
 		}
 
 		return $this->instance->save($item);
@@ -108,42 +101,6 @@ class ProxyCache extends PhpfastcacheAbstractProxy
 	public function delete(string $key) : bool
 	{
 		return $this->instance->deleteItem($key);
-	}
-
-	/**
-	 * Delete caches by keys.
-	 *
-	 * @access public
-	 * @param array $keys
-	 * @return bool
-	 */
-	public function deleteMany(array $keys) : bool
-	{
-		return $this->instance->deleteItems($keys);
-	}
-
-	/**
-	 * Delete cache by tag.
-	 *
-	 * @access public
-	 * @param string $tag
-	 * @return bool
-	 */
-	public function deleteByTag(string $tag) : bool
-	{
-		return $this->instance->deleteItemsByTag($tag);
-	}
-
-	/**
-	 * Delete cache by tags.
-	 *
-	 * @access public
-	 * @param array $tags
-	 * @return bool
-	 */
-	public function deleteByTags(array $tags) : bool
-	{
-		return $this->instance->deleteItemsByTags($tags);
 	}
 
 	/**
@@ -164,7 +121,7 @@ class ProxyCache extends PhpfastcacheAbstractProxy
 	 * @param string $key
 	 * @return object
 	 */
-	protected function getItem(string $key)
+	protected function getItem(string $key) : object
 	{
 		return $this->instance->getItem($key);
 	}

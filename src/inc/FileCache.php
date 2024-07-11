@@ -60,9 +60,6 @@ final class FileCache extends ProxyCache implements CacheInterface
 					$this->debug($e->getMessage());
 				}
 			}
-	
-			// Reset config
-			$this->resetConfig();
 			
 		}
     }

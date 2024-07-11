@@ -42,6 +42,7 @@ final class RedisCache extends ProxyCache implements CacheInterface
 				'port'       => 6379,
 				'password'   => '',
 				'database'   => 0,
+				'timeout'    => 1,
 				'defaultTtl' => $this->getExpireIn()
 			], $config);
 	
@@ -63,9 +64,6 @@ final class RedisCache extends ProxyCache implements CacheInterface
 			if ( !$this->instance ) {
 				$this->instance = new FileCache();
 			}
-	
-			// Reset config
-			$this->resetConfig();
 			
 		}
     }
