@@ -58,7 +58,7 @@ class Cache
 				self::$instance = new FileCache($config);
 			}
 			
-			if ( !$this->hasObject('interface', self::$instance, 'cache') ) {
+			if ( !$this->hasObject('interface', self::$instance, 'Cache') ) {
 				throw new CacheException(
 					CacheException::invalidCacheInstance()
 				);
