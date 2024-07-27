@@ -2,7 +2,7 @@
 /**
  * @author    : Jakiboy
  * @package   : VanillePlugin
- * @version   : 1.0.x
+ * @version   : 0.9.x
  * @copyright : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link      : https://jakiboy.github.io/VanillePlugin/
  * @license   : MIT
@@ -15,6 +15,9 @@ declare(strict_types=1);
 namespace VanilleCache\inc;
 
 use VanilleCache\int\CacheInterface;
+use VanillePlugin\inc\{
+	Arrayify, Exception as Handler
+};
 use Phpfastcache\Drivers\Files\Config;
 
 /**
@@ -36,7 +39,7 @@ final class FileCache extends ProxyCache implements CacheInterface
     {
 		if ( !static::$initialized ) {
 
-			$config = $this->mergeArray([
+			$config = Arrayify::merge([
 				'path'               => $this->getTempPath(),
 				'autoTmpFallback'    => true,
 				'compressData'       => true,
@@ -47,18 +50,16 @@ final class FileCache extends ProxyCache implements CacheInterface
 				'securityKey'        => 'private',
 				'cacheFileExtension' => 'txt'
 			], $config);
-	
+
 			try {
 	
 				parent::__construct('Files', new Config($config));
 	
 			} catch (\Phpfastcache\Exceptions\PhpfastcacheIOException $e) {
-	
-				$this->clearLastError();
-				if ( $this->hasDebug() ) {
-					$this->error('File cache failed');
-					$this->debug($e->getMessage());
+				if ( $this->isDebug() ) {
+					die($e);
 				}
+				Handler::clearLastError();
 			}
 			
 		}

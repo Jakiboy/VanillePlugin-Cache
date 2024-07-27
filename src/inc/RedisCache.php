@@ -2,7 +2,7 @@
 /**
  * @author    : Jakiboy
  * @package   : VanillePlugin
- * @version   : 1.0.x
+ * @version   : 0.9.x
  * @copyright : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link      : https://jakiboy.github.io/VanillePlugin/
  * @license   : MIT
@@ -15,6 +15,9 @@ declare(strict_types=1);
 namespace VanilleCache\inc;
 
 use VanilleCache\int\CacheInterface;
+use VanillePlugin\inc\{
+	Arrayify, Exception as Handler
+};
 use Phpfastcache\Drivers\Redis\Config;
 
 /**
@@ -37,7 +40,7 @@ final class RedisCache extends ProxyCache implements CacheInterface
 		if ( !static::$initialized ) {
 
 			unset($config['path']);
-			$config = $this->mergeArray([
+			$config = Arrayify::merge([
 				'host'       => '127.0.0.1',
 				'port'       => 6379,
 				'password'   => '',
@@ -53,12 +56,10 @@ final class RedisCache extends ProxyCache implements CacheInterface
 				\Phpfastcache\Exceptions\PhpfastcacheDriverConnectException |
 				\Phpfastcache\Exceptions\PhpfastcacheDriverCheckException $e
 			) {
-	
-				$this->clearLastError();
-				if ( $this->hasDebug() ) {
-					$this->error('Redis cache failed');
-					$this->debug($e->getMessage());
+				if ( $this->isDebug() ) {
+					die($e);
 				}
+				Handler::clearLastError();
 			}
 
 			if ( !$this->instance ) {

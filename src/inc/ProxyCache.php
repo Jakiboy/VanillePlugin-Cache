@@ -2,7 +2,7 @@
 /**
  * @author    : Jakiboy
  * @package   : VanillePlugin
- * @version   : 1.0.x
+ * @version   : 0.9.x
  * @copyright : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link      : https://jakiboy.github.io/VanillePlugin/
  * @license   : MIT
@@ -22,9 +22,7 @@ use Phpfastcache\Proxy\PhpfastcacheAbstractProxy;
  */
 class ProxyCache extends PhpfastcacheAbstractProxy
 {
-	use \VanillePlugin\VanillePluginConfig,
-		\VanillePlugin\tr\TraitThrowable,
-		\VanillePlugin\tr\TraitLoggable;
+	use \VanillePlugin\VanillePluginConfig;
 
 	/**
 	 * Instance cache driver.

@@ -2,7 +2,7 @@
 /**
  * @author    : Jakiboy
  * @package   : VanillePlugin
- * @version   : 1.0.x
+ * @version   : 0.9.x
  * @copyright : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link      : https://jakiboy.github.io/VanillePlugin/
  * @license   : MIT
@@ -18,14 +18,15 @@ use VanilleCache\inc\{
 	FileCache, RedisCache
 };
 use VanilleCache\exc\CacheException;
+use VanillePlugin\inc\{
+	Arrayify, TypeCheck
+};
 
 /**
  * Built-in cache factory.
  */
 class Cache
 {
-	use \VanillePlugin\tr\TraitFormattable;
-
 	/**
 	 * @access private
 	 * @var object $instance, Cache instance
@@ -45,7 +46,7 @@ class Cache
 	{
 		if ( !self::$instance ) {
 
-			if ( !$this->inArray($driver, self::DRIVERS) ) {
+			if ( !Arrayify::inArray($driver, self::DRIVERS) ) {
 				throw new CacheException(
 					CacheException::invalidCacheDriver($driver)
 				);
@@ -57,13 +58,13 @@ class Cache
 			} else {
 				self::$instance = new FileCache($config);
 			}
-			
-			if ( !$this->hasObject('interface', self::$instance, 'cache') ) {
+
+			if ( !TypeCheck::hasInterface(self::$instance, 'CacheInterface') ) {
 				throw new CacheException(
 					CacheException::invalidCacheInstance()
 				);
 			}
-			
+
 		}
 	}
 

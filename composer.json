@@ -1,6 +1,6 @@
 {
   "name":"jakiboy/vanilleplugin-cache",
-  "version":"1.0.8",
+  "version":"0.9.6",
   "type":"library",
   "description":"FileCache Wrapper Class for WordPress Plugins",
   "keywords":[
@@ -23,7 +23,7 @@
   "require":{
     "php":">=7.4",
     "phpfastcache/phpfastcache":"^8.1.4",
-    "jakiboy/vanilleplugin":"^1.0.8"
+    "jakiboy/vanilleplugin":"^0.9.6"
   },
   "autoload":{
     "psr-4":{
