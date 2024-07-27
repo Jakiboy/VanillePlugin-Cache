@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace VanilleCache\inc;
 
 use Phpfastcache\Proxy\PhpfastcacheAbstractProxy;
+use VanillePlugin\inc\TypeCheck;
 
 /**
  * Wrapper class for AbstractCache.
@@ -78,11 +79,11 @@ class ProxyCache extends PhpfastcacheAbstractProxy
 		$item = $this->getItem($key);
 		$item->set($value);
 
-		if ( !$this->isType('null', $ttl) ) {
+		if ( !TypeCheck::isNull($ttl) ) {
 			$item->expiresAfter($ttl);
 		}
 
-		if ( !$this->isType('null', $group) ) {
+		if ( !TypeCheck::isNull($group) ) {
 			$item->addTag($group);
 		}
 
